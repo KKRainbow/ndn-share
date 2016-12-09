@@ -20,7 +20,11 @@ SOURCES += main.cpp \
     chatroom.cpp \
     chatroombackend.cpp \
     chatmessage.cpp \
-    sendrandommsg.cpp
+    sendrandommsg.cpp \
+    consoleserver.cpp \
+    eventhandler.cpp \
+    resourceregister.cpp \
+    resourcefetcher.cpp
 
 HEADERS += \
     nfdc.h \
@@ -28,7 +32,11 @@ HEADERS += \
     chatroom.h \
     chatroombackend.h \
     chatmessage.h \
-    sendrandommsg.h
+    sendrandommsg.h \
+    consoleserver.h \
+    eventhandler.h \
+    resourceregister.h \
+    resourcefetcher.h
 
 QMAKE_CXXFLAGS += -std=c++11
 LIBS += -lndn-cxx -lChronoSync -lboost_system -lboost_filesystem -lboost_thread -lcryptopp -lsqlite3

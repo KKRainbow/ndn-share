@@ -33,9 +33,9 @@ void ChatroomBackend::removeChatroom(QString chatroomName)
     m_socket->removeSyncNode(getNodePrefix(chatroomName));
 }
 
-void ChatroomBackend::sendMessage(QString chatroomName, QString msg)
+void ChatroomBackend::sendMessage(QString chatroomName, QByteArray msg)
 {
-    auto blk = ChatMessage::getEncodedBlock(msg.toStdString());
+    auto blk = ChatMessage::getEncodedBlock(msg);
     m_socket->publishData(blk.wire(), blk.size(), ndn::time::milliseconds(60000), getNodePrefix(chatroomName));
 }
 
@@ -49,7 +49,7 @@ void ChatroomBackend::processFetchedData(const std::shared_ptr<const ndn::Data> 
         QString str = QString::fromStdString(name.toUri());
         if (str.indexOf(QRegExp(QString("/%1[/$]").arg(room))) >= 0)
         {
-            emit fetchMessage(room, QString::fromStdString(msg));
+            emit fetchMessage(room, msg);
         }
     }
 }

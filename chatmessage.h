@@ -9,16 +9,15 @@ class ChatMessage : public QObject
 {
     Q_OBJECT
 public:
-    static ndn::Block getEncodedBlock(const std::string& msg);
-    static std::string getDecodedString(ndn::Block& block);
+    static ndn::Block getEncodedBlock(const QByteArray& msg);
+    static QByteArray getDecodedString(ndn::Block& block);
 private:
     explicit ChatMessage(QObject *parent = 0);
 
     template<bool T>
-    static int encode(ndn::EncodingImpl<T>& encoder, const std::string& msg)
+    static int encode(ndn::EncodingImpl<T>& encoder, QByteArray& msg)
     {
-        auto cstr = (uint8_t*)msg.c_str();
-        int len = encoder.prependByteArrayBlock(TYPE, cstr, msg.length());
+        int len = encoder.prependByteArrayBlock(TYPE, (uint8_t*)msg.data(), msg.length());
         return len;
     }
 

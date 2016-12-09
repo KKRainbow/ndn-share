@@ -15,14 +15,17 @@ class Chatroom : public QObject
     static std::shared_ptr<ChatroomBackend> m_backend;
 public:
     static std::shared_ptr<Chatroom> getChatroom(QString chatroomName,
-                                            ndn::Name routePrefix,
-                                            ndn::Name broadcastPrefix);
+                                                 QString nickname,
+                                                 ndn::Name routePrefix,
+                                                 ndn::Name broadcastPrefix);
 
-    QString getOneMessage();
+    QString getOneMessage(bool blocked);
     QStringList getMessages(int num);
     void sendMessage(std::string& msg);
     Chatroom(QString chatroomName,
+             QString nickname,
              QObject *parent = 0);
+    void getNickname();
 private:
     void emitAddChatroomSignal();
 private:
@@ -30,13 +33,15 @@ private:
     std::queue<QString> m_messageQueue;
     QSemaphore m_msgQueueSema;
     QMutex m_msgQueueMutex;
+    QString m_nick;
 
 signals:
-    void sendMessageSignal(QString chatroomName, QString msg);
+    void sendMessageSignal(QString chatroomName, QByteArray msg);
     void addChatroomSignal(QString chatroomName);
+    void newMessageSignal(QString chatroomName, QString nick, qint64 timestamp, QString msg);
 
 public slots:
-    void fetchMessageSlot(QString chatroomName, QString msg);
+    void fetchMessageSlot(QString chatroomName, QByteArray msg);
 };
 
 #endif // CHATROOM_H

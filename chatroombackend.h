@@ -33,10 +33,10 @@ private:
     QTimer m_timerNfdc;
 
 signals:
-    void fetchMessage(QString chatroomName, QString msg);
+    void fetchMessage(QString chatroomName, QByteArray msg);
 
 public slots:
-    void sendMessage(QString chatroomName, QString msg);
+    void sendMessage(QString chatroomName, QByteArray msg);
     void addChatroom(QString chatroomName);
     void nfdcMakeBroadcast();
 };

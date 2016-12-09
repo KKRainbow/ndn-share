@@ -6,4 +6,6 @@
 
 #include <boost/assert.hpp>
 
+using namespace std::placeholders;
+
 #endif // COMMON_H
