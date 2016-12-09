@@ -18,11 +18,11 @@ Chatroom::Chatroom(QString chatroomName,
 void Chatroom::sendMessage(std::string& msg)
 {
     QByteArray byteArr;
-    QDataStream s(&byteaArr);
+    QDataStream s(byteArr);
     qint64 timestamp = (qint64)QDateTime::currentDateTime().toTime_t();
-    s << m_nick << timestamp << msg;
+    s << m_nick << timestamp << QString::fromStdString(msg);
 
-    emit sendMessageSignal(m_chatroomName, QString::fromStdString(msg));
+    emit sendMessageSignal(m_chatroomName, byteArr);
 }
 
 void Chatroom::emitAddChatroomSignal()
@@ -64,10 +64,9 @@ void Chatroom::fetchMessageSlot(QString chatroomName, QByteArray msg)
     }
     m_msgQueueMutex.lock();
     m_messageQueue.push(msg);
-    m_msgQueueSema.release();
-    std::cerr << "get msg from " << chatroomName.toStdString() << msg.toStdString() <<std::endl;
     m_msgQueueMutex.unlock();
-    QDataStream s(&msg);
+    m_msgQueueSema.release();
+    QDataStream s(msg);
     QString nick;
     qint64 timestamp;
     QString content;
@@ -100,7 +99,7 @@ QStringList Chatroom::getMessages(int num)
     return QStringList();
 }
 
-void Chatroom::getNickname()
+QString Chatroom::getNickname()
 {
     return m_nick;
 }

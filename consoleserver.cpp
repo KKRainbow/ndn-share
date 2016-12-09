@@ -1,15 +1,37 @@
 #include "consoleserver.h"
 
- ConsoleServer::ConsoleServer(std::shared_ptr<Chatroom> chatroom, QObject *parent):
+ ConsoleServer::ConsoleServer(std::shared_ptr<EventHandler> eventHandler, QObject *parent):
     QThread(parent),
     m_inputStream(stdin),
     m_outputStream(stdout),
-    m_chatroom(chatroom)
+    m_eventHandler(eventHandler)
 {
+    connect(&m_resourceFetcher,
+            SIGNAL(fetchResourceResultSignal(QString,QString,QByteArray)),
+            this,
+            SLOT(fetchResourceResultSlot(QString,QString,QByteArray)));
+    connect(this,
+            SIGNAL(fetchResource(QString,QString)),
+            &m_resourceFetcher,
+            SLOT(fetchResource(QString,QString)));
+
+    connect(this,
+            SIGNAL(publishResourceSignal(QString,QString)),
+            m_eventHandler.get(),
+            SLOT(publishResource(QString,QString)));
+    connect(this,
+            SIGNAL(getNodesList(QString)),
+            m_eventHandler.get(),
+            SLOT(getNodesList(QString)));
+    connect(this,
+            SIGNAL(getResourcesList()),
+            m_eventHandler.get(),
+            SLOT(getResourcesList()));
 }
 
 void ConsoleServer::run()
 {
+    m_eventHandler->start();
     while(true)
     {
         QString line = m_inputStream.readLine();
@@ -19,32 +41,66 @@ void ConsoleServer::run()
 
 }
 
-QString ConsoleServer::resultFormatter(bool isSuccessful, QString msg)
-{
-    return "";
-}
-
 QString ConsoleServer::execute(QString commandLine)
 {
     QTextStream s(&commandLine);
-    QString com, chatroomName;
+    QString com;
     s >> com;
 
-    std::shared_ptr<Chatroom> room = m_chatroom;
+    if (running)
+    {
+        std::cout << "Running previous command, please wait" << std::endl;
+    }
 
-    if (com == "fetch")
+    if (com == "pull")
     {
-        QString blockStr;
-        s >> blockStr;
-        bool block = blockStr == "block";
-        QString msg = room->getOneMessage(block);
-        return msg;
+        QString resource, address;
+        s >> resource >> address;
+        running = true;
+        emit fetchResource(resource, address);
     }
-    else if (com == "send")
+    else if (com == "push")
     {
-        auto msg = s.readAll().toStdString();
-        room->sendMessage(msg);
-        return "";
+        QString resource, filename;
+        s >> resource >> filename;
+        filename = QDir::current().filePath(filename);
+        emit publishResourceSignal(resource, filename);
     }
-    return "Usage: fetch, send MSG";
+    else if (com == "listres")
+    {
+        running = true;
+        emit getResourcesList();
+    }
+    else if (com == "listnode")
+    {
+        QString resource;
+        s >> resource;
+        running = true;
+        emit getNodesList(resource);
+    }
+    return "Usage: pull RES ADDR, push RES FILENAME";
+}
+
+void ConsoleServer::fetchResourceResultSlot(QString resource, QString address, QByteArray data)
+{
+    std::cout << resource.toStdString() << ' ' << address.toStdString() << ' ' << QString(data).toStdString() << std::endl;
+    running = false;
+}
+
+void ConsoleServer::onResourcesListReady(QStringList stringList)
+{
+    for (auto& str : stringList)
+    {
+        std::cout << str.toStdString() << std::endl;
+    }
+    running = false;
+}
+
+void ConsoleServer::onNodesListReady(QStringList stringList)
+{
+    for (auto& str : stringList)
+    {
+        std::cout << str.toStdString() << std::endl;
+    }
+    running = false;
 }

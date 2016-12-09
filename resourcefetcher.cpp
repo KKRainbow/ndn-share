@@ -1,6 +1,7 @@
 #include "resourcefetcher.h"
 #include <QString>
 #include <chatmessage.h>
+#include "ndn-cxx/face.hpp"
 
 ResourceFetcher::ResourceFetcher(QObject *parent) :
     QThread(parent)
@@ -36,6 +37,6 @@ void ResourceFetcher::onInterestTimeout(const ndn::Interest& interest)
 
 void ResourceFetcher::run()
 {
-    this->m_face.getIoService().run();
+    m_face.getIoService().run();
     std::cerr << "Fetcher exit!!!" << std::endl;
 }

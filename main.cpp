@@ -1,23 +1,22 @@
 #include <QCoreApplication>
-#include "chatroom.h"
 #include "sendrandommsg.h"
+#include "eventhandler.h"
 #include "consoleserver.h"
 
-//args: host prefix
+//args: host dir
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     ndn::Name r = ndn::Name("/ndn/edu");
     ndn::Name b = ndn::Name("/ndn/broadcast/CHAT");
 
-    if (argc == 2)
-    {
-        r.append(argv[1]);
-    }
+    r.append(argv[1]);
+    QDir dir(argv[2]);
 
-    auto cr = Chatroom::getChatroom("abc", argv[1], r,b);
+    auto cr = Chatroom::getChatroom("abc", argv[1], r, b);
+    auto eventHandler = std::make_shared<EventHandler>(cr, dir, r);
 
-    ConsoleServer s(cr);
+    ConsoleServer s(eventHandler);
     s.start();
 
     /*

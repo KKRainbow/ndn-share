@@ -3,6 +3,7 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/name.hpp>
+#include <boost/asio.hpp>
 
 #include <boost/assert.hpp>
 

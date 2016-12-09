@@ -11,14 +11,15 @@ class ResourceRegister : public QThread
     Q_OBJECT
 public:
     explicit ResourceRegister(ndn::Name prefix, QObject *parent = 0);
+    void run() override;
 
 private:
-    void registerPrefixFailed(std::string& failInfo);
+    void registerPrefixFailed(const ndn::Name& prefix, const std::string& failInfo);
     void onInterest(const ndn::Name& prefix, const ndn::Interest& interest);
 
 private:
     ndn::Face m_face;
-    std::map<QString, QFile> m_resourceFileMap;
+    std::map<QString, QString> m_resourceFileMap;
     std::map<QString, int> m_resourceCounterMap;
     ndn::Name m_prefix;
 
@@ -27,7 +28,7 @@ signals:
     void unregisterResourceResult(QString resource, bool res, QString msg);
 
 public slots:
-    void registerResource(QString resourceName, QFile file);
+    void registerResource(QString resourceName, QString filename);
     void unregisterResource(QString resourceName);
 };
 

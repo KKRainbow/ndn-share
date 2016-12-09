@@ -15,7 +15,7 @@ private:
     explicit ChatMessage(QObject *parent = 0);
 
     template<bool T>
-    static int encode(ndn::EncodingImpl<T>& encoder, QByteArray& msg)
+    static int encode(ndn::EncodingImpl<T>& encoder, const QByteArray& msg)
     {
         int len = encoder.prependByteArrayBlock(TYPE, (uint8_t*)msg.data(), msg.length());
         return len;

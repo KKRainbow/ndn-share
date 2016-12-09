@@ -25,7 +25,7 @@ public:
     Chatroom(QString chatroomName,
              QString nickname,
              QObject *parent = 0);
-    void getNickname();
+    QString getNickname();
 private:
     void emitAddChatroomSignal();
 private:
