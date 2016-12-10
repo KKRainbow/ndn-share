@@ -27,6 +27,10 @@ ConsoleServer::ConsoleServer(std::shared_ptr<EventHandler> eventHandler, QObject
             SIGNAL(getResourcesList()),
             m_eventHandler.get(),
             SLOT(getResourcesList()));
+    connect(this,
+            SIGNAL(getOnlineList()),
+            m_eventHandler.get(),
+            SLOT(getOnlineList()));
     connect(m_eventHandler.get(),
             SIGNAL(resourcesListReady(QStringList)),
             this,
@@ -90,6 +94,11 @@ QString ConsoleServer::execute(QString commandLine)
         s >> resource;
         running = true;
         emit getNodesList(resource);
+    }
+    else if (com == "listonline")
+    {
+        running = true;
+        emit getOnlineList();
     }
     return "";
 }

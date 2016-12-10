@@ -8,10 +8,9 @@ std::shared_ptr<ChatroomBackend> Chatroom::m_backend;
 Chatroom::Chatroom(QString chatroomName,
                    QString nickname,
                    QObject *parent):
-    m_nick(nickname),
     QObject(parent),
-    m_chatroomName(chatroomName),
-    m_msgQueueSema()
+    m_nick(nickname),
+    m_chatroomName(chatroomName)
 {
 }
 
@@ -62,41 +61,12 @@ void Chatroom::fetchMessageSlot(QString chatroomName, QByteArray msg)
         //not this room
         return;
     }
-    m_msgQueueMutex.lock();
-    m_messageQueue.push(msg);
-    m_msgQueueMutex.unlock();
-    m_msgQueueSema.release();
     QDataStream s(msg);
     QString nick;
     qint64 timestamp;
     QString content;
     s >> nick >> timestamp >> content;
     emit newMessageSignal(chatroomName, nick, timestamp, content);
-}
-QString Chatroom::getOneMessage(bool blocked)
-{
-    if (blocked)
-    {
-        m_msgQueueSema.acquire();
-    }
-    else
-    {
-        bool res = m_msgQueueSema.tryAcquire();
-        if (!res)
-        {
-            return "";
-        }
-    }
-    m_msgQueueMutex.lock();
-    auto msg = m_messageQueue.front();
-    m_messageQueue.pop();
-    m_msgQueueMutex.unlock();
-    return msg;
-}
-
-QStringList Chatroom::getMessages(int num)
-{
-    return QStringList();
 }
 
 QString Chatroom::getNickname()

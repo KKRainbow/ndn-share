@@ -19,8 +19,6 @@ public:
             ndn::Name routePrefix,
             ndn::Name broadcastPrefix);
 
-    QString getOneMessage(bool blocked);
-    QStringList getMessages(int num);
     void sendMessage(std::string& msg);
     Chatroom(QString chatroomName,
              QString nickname,
@@ -29,11 +27,8 @@ public:
 private:
     void emitAddChatroomSignal();
 private:
-    QString m_chatroomName;
-    std::queue<QString> m_messageQueue;
-    QSemaphore m_msgQueueSema;
-    QMutex m_msgQueueMutex;
     QString m_nick;
+    QString m_chatroomName;
 
 signals:
     void sendMessageSignal(QString chatroomName, QByteArray msg);

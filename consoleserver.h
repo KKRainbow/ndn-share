@@ -29,6 +29,7 @@ signals:
     void publishResourceSignal(QString resource, QString filename);
     void fetchResource(QString resource, QString address);
     void getResourcesList();
+    void getOnlineList();
     void getNodesList(QString resource);
 
 private slots:

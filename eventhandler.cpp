@@ -64,7 +64,9 @@ void EventHandler::newMessageSlot(QString chatroom, QString nick, qint64 timesta
     QTextStream ts(&msg);
     QString com;
     ts >> com;
-    std::cerr << "New message from " << nick.toStdString() << " time: " << timestamp <<
+    std::cerr << "New message in "<< chatroom.toStdString() <<
+              " from " << nick.toStdString() <<
+              " time: " << timestamp <<
               ", Conetent: " << msg.toStdString() << std::endl;
     if (com == "JOIN")
     {
@@ -99,12 +101,15 @@ void EventHandler::possessHandler(QString resource, QString address, QString nic
     {
         if (getNicknameFromResourceNode(node) == nickname)
         {
+            std::cerr << "Corresponsibal resource found, changing availibility" << std::endl;
             getAvailabilityFromResourceNode(node) = true;
             return;
         }
     }
     ResourceNode newNode = std::make_tuple(ndn::Name(address.toStdString()), true, nickname);
     nodes.push_back(newNode);
+    std::cerr << "Corresponsibal resource not found, adding to tail" << ", new size" <<
+              nodes.size() << std::endl;
 }
 
 void EventHandler::releaseHandler(QString resource, QString nickname)
@@ -165,16 +170,9 @@ void EventHandler::registerResourceResultSlot(QString resource, bool res, QStrin
     if (res)
     {
         ResourceNodes& nodes = m_indexTable[resource];
-        auto iter =  findResourceNodeByNickname(nodes, m_chatroom->getNickname());
         ndn::Name name = msg.toStdString();
-        if (iter == nodes.end())
-        {
-            this->m_indexTable[resource].push_back(std::make_tuple(name, true, m_chatroom->getNickname()));
-        }
-        else {
-            getAvailabilityFromResourceNode(*iter) = true;
-        }
         sendPosses(resource, name);
+        possessHandler(resource, msg, m_chatroom->getNickname());
     }
 }
 
@@ -207,6 +205,8 @@ void EventHandler::increseRedundanceHandler()
 
 void EventHandler::unregisterResourceResultSlot(QString resource, bool res, QString msg)
 {
+    std::cerr << "Unregister resource: " << resource.toStdString() << " result: " << res << " msg: "
+              << msg.toStdString() << std::endl;
     if (res)
     {
         try
@@ -347,8 +347,8 @@ void EventHandler::getNodesList(QString resource)
             str = QString("%1 %2 %3").arg(QString::fromStdString(std::get<0>(node).toUri()))
                   .arg(std::get<1>(node))
                   .arg(std::get<2>(node));
+            list << str;
         }
-        list << str;
     }
     catch(...)
     {

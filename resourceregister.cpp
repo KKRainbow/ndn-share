@@ -15,7 +15,8 @@ ResourceRegister::ResourceRegister(ndn::Name prefix, QObject *parent):
 
 void ResourceRegister::registerPrefixFailed(const ndn::Name& prefix, const std::string& failInfo)
 {
-    std::cerr << "Resource register start failed: " << failInfo << std::endl;
+    std::cerr << "Resource register start failed: " << failInfo <<
+              ". prefix: " << prefix.toUri() << std::endl;
 }
 
 void ResourceRegister::onInterest(const ndn::Name& prefix, const ndn::Interest& interest)
