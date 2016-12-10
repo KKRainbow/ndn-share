@@ -35,6 +35,7 @@ private slots:
     void fetchResourceResultSlot(QString resource, QString address, QByteArray data);
     void onResourcesListReady(QStringList stringList);
     void onNodesListReady(QStringList stringList);
+    void onOnlineListReady(QStringList stringList);
 
 public slots:
 };

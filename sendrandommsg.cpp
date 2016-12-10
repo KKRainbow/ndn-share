@@ -1,9 +1,9 @@
 #include "sendrandommsg.h"
 
 SendRandomMsg::SendRandomMsg(Chatroom* cd, int second, QString msg, QObject* parent):
-        QObject(parent),
-        m_msg(msg),
-        m_chatroom(cd)
+    QObject(parent),
+    m_msg(msg),
+    m_chatroom(cd)
 {
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()),this,SLOT(onMyTimer()));
@@ -11,8 +11,8 @@ SendRandomMsg::SendRandomMsg(Chatroom* cd, int second, QString msg, QObject* par
 }
 SendRandomMsg::~SendRandomMsg()
 {
-m_timer->stop();
-delete m_timer;
+    m_timer->stop();
+    delete m_timer;
 }
 
 void SendRandomMsg::onMyTimer()
@@ -27,12 +27,12 @@ void SendRandomMsg::onMyTimer()
     }
     if (m_msg.length() == 0)
     {
-    std::string msg = ss.str();
-    m_chatroom->sendMessage(msg);
+        std::string msg = ss.str();
+        m_chatroom->sendMessage(msg);
     }
     else
     {
-    std::string msg = m_msg.toStdString();
-    m_chatroom->sendMessage(msg);
+        std::string msg = m_msg.toStdString();
+        m_chatroom->sendMessage(msg);
     }
 }

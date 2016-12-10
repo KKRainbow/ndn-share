@@ -12,6 +12,7 @@ void ResourceFetcher::onData(const ndn::Interest& interest, ndn::Data& data, QSt
 {
     auto blk = data.getContent();
     QByteArray bytes = ChatMessage::getDecodedString(blk);
+    std::cerr << "On data" << std::endl;
     emit fetchResourceResultSignal(resource,
                                    QString::fromStdString(interest.getName().toUri()),
                                    bytes);
@@ -19,15 +20,12 @@ void ResourceFetcher::onData(const ndn::Interest& interest, ndn::Data& data, QSt
 
 void ResourceFetcher::fetchResource(QString resource, QString address)
 {
-    ndn::Name name = address.toStdString();
-    ndn::Interest interest;
-    interest.setName(name);
-    interest.setMustBeFresh(true);
-    interest.setInterestLifetime(ndn::time::milliseconds(60000));
-    interest.getNonce();
+    ndn::Name name = address.trimmed().toStdString();
+    ndn::Interest interest(name);
     m_face.expressInterest(interest,
                            std::bind(&ResourceFetcher::onData, this, std::placeholders::_1, std::placeholders::_2, resource),
                            std::bind(&ResourceFetcher::onInterestTimeout, this, std::placeholders::_1));
+    std::cerr << "Express interest: " << address.toStdString() << std::endl;
 }
 
 void ResourceFetcher::onInterestTimeout(const ndn::Interest& interest)
@@ -37,6 +35,14 @@ void ResourceFetcher::onInterestTimeout(const ndn::Interest& interest)
 
 void ResourceFetcher::run()
 {
-    m_face.getIoService().run();
-    std::cerr << "Fetcher exit!!!" << std::endl;
+    try
+    {
+        m_face.processEvents(ndn::time::milliseconds::zero(), true);
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Fetcher exit!!!" << std::endl;
+        std::cerr << e.what() << std::endl;
+    }
+
 }

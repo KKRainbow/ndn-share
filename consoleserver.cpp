@@ -1,6 +1,6 @@
 #include "consoleserver.h"
 
- ConsoleServer::ConsoleServer(std::shared_ptr<EventHandler> eventHandler, QObject *parent):
+ConsoleServer::ConsoleServer(std::shared_ptr<EventHandler> eventHandler, QObject *parent):
     QThread(parent),
     m_inputStream(stdin),
     m_outputStream(stdout),
@@ -27,15 +27,28 @@
             SIGNAL(getResourcesList()),
             m_eventHandler.get(),
             SLOT(getResourcesList()));
+    connect(m_eventHandler.get(),
+            SIGNAL(resourcesListReady(QStringList)),
+            this,
+            SLOT(onResourcesListReady(QStringList)));
+    connect(m_eventHandler.get(),
+            SIGNAL(nodesListReady(QStringList)),
+            this,
+            SLOT(onNodesListReady(QStringList)));
+    connect(m_eventHandler.get(),
+            SIGNAL(onlineListReady(QStringList)),
+            this,
+            SLOT(onOnlineListReady(QStringList)));
 }
 
 void ConsoleServer::run()
 {
     m_eventHandler->start();
+    m_resourceFetcher.start();
     while(true)
     {
         QString line = m_inputStream.readLine();
-        m_outputStream << execute(line) << '\n';
+        execute(line);
         m_outputStream.flush();
     }
 
@@ -49,7 +62,7 @@ QString ConsoleServer::execute(QString commandLine)
 
     if (running)
     {
-        std::cout << "Running previous command, please wait" << std::endl;
+        m_outputStream << "Running previous command, please wait" << '\n';
     }
 
     if (com == "pull")
@@ -78,12 +91,13 @@ QString ConsoleServer::execute(QString commandLine)
         running = true;
         emit getNodesList(resource);
     }
-    return "Usage: pull RES ADDR, push RES FILENAME";
+    return "";
 }
 
 void ConsoleServer::fetchResourceResultSlot(QString resource, QString address, QByteArray data)
 {
-    std::cout << resource.toStdString() << ' ' << address.toStdString() << ' ' << QString(data).toStdString() << std::endl;
+    m_outputStream << resource << ' ' << address << ' ' << QString(data) << '\n';
+    m_outputStream.flush();
     running = false;
 }
 
@@ -91,8 +105,9 @@ void ConsoleServer::onResourcesListReady(QStringList stringList)
 {
     for (auto& str : stringList)
     {
-        std::cout << str.toStdString() << std::endl;
+        m_outputStream << str << '\n';
     }
+    m_outputStream.flush();
     running = false;
 }
 
@@ -100,7 +115,17 @@ void ConsoleServer::onNodesListReady(QStringList stringList)
 {
     for (auto& str : stringList)
     {
-        std::cout << str.toStdString() << std::endl;
+        m_outputStream << str << '\n';
     }
+    m_outputStream.flush();
+    running = false;
+}
+void ConsoleServer::onOnlineListReady(QStringList stringList)
+{
+    for (auto& str : stringList)
+    {
+        m_outputStream << str << '\n';
+    }
+    m_outputStream.flush();
     running = false;
 }

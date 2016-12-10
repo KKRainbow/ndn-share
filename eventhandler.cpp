@@ -4,11 +4,12 @@
 #include <QTime>
 #include <QFileInfo>
 
-EventHandler::EventHandler(std::shared_ptr<Chatroom> chatroom, QDir dir, ndn::Name prefix, QObject *parent) :
-        m_dir(dir),
-        m_resourceRegister(prefix),
-        m_chatroom(chatroom),
-        QThread(parent)
+EventHandler::EventHandler(std::shared_ptr<Chatroom> chatroom, QDir dir, ndn::Name prefix, quint32 min, quint32 max, QObject *parent) :
+    QThread(parent),
+    m_chatroom(chatroom),
+    m_dir(dir),
+    m_resourceRegister(prefix),
+    m_redundentValue(min, max)
 {
     if (!m_dir.exists())
     {
@@ -63,6 +64,8 @@ void EventHandler::newMessageSlot(QString chatroom, QString nick, qint64 timesta
     QTextStream ts(&msg);
     QString com;
     ts >> com;
+    std::cerr << "New message from " << nick.toStdString() << " time: " << timestamp <<
+              ", Conetent: " << msg.toStdString() << std::endl;
     if (com == "JOIN")
     {
         joinHandler(nick);
@@ -157,18 +160,21 @@ void EventHandler::leaveHandler(QString nickname)
 
 void EventHandler::registerResourceResultSlot(QString resource, bool res, QString msg)
 {
+    std::cerr << "Register resource: " << resource.toStdString() << " result: " << res << " msg: "
+              <<msg.toStdString() << std::endl;
     if (res)
     {
-        ResourceNodes& nodes = m_indexTable.at(resource);
+        ResourceNodes& nodes = m_indexTable[resource];
         auto iter =  findResourceNodeByNickname(nodes, m_chatroom->getNickname());
         ndn::Name name = msg.toStdString();
         if (iter == nodes.end())
         {
             this->m_indexTable[resource].push_back(std::make_tuple(name, true, m_chatroom->getNickname()));
         }
-        else{
+        else {
             getAvailabilityFromResourceNode(*iter) = true;
         }
+        sendPosses(resource, name);
     }
 }
 
@@ -178,8 +184,14 @@ void EventHandler::increseRedundanceHandler()
     for (auto& nodesPair : m_indexTable)
     {
         if (nodesPair.second.size() < m_redundentValue.first &&
-                        nodesPair.second.size() > 0)
+                nodesPair.second.size() > 0)
         {
+            auto iter = findResourceNodeByNickname(nodesPair.second, m_chatroom->getNickname());
+            if (iter != nodesPair.second.end())
+            {
+                //don't get my file
+                continue;
+            }
             int r = nodesPair.second.size();
             int x = m_onlineHost.size();
             int t = m_redundentValue.first;
@@ -199,12 +211,13 @@ void EventHandler::unregisterResourceResultSlot(QString resource, bool res, QStr
     {
         try
         {
-        ResourceNodes& nodes = m_indexTable.at(resource);
-        auto iter =  findResourceNodeByNickname(nodes, m_chatroom->getNickname());
-        if (iter != nodes.end())
-        {
-           nodes.erase(iter);
-        }
+            ResourceNodes& nodes = m_indexTable.at(resource);
+            auto iter =  findResourceNodeByNickname(nodes, m_chatroom->getNickname());
+            if (iter != nodes.end())
+            {
+                nodes.erase(iter);
+            }
+            sendRelease(resource);
         }
         catch(...)
         {
@@ -219,6 +232,12 @@ void EventHandler::decreseRedundanceHandler()
     {
         if (nodesPair.second.size() > m_redundentValue.second)
         {
+            auto iter = findResourceNodeByNickname(nodesPair.second, m_chatroom->getNickname());
+            if (iter == nodesPair.second.end())
+            {
+                //I don't have this file!
+                continue;
+            }
             int r = nodesPair.second.size();
             int t = m_redundentValue.second;
             bool flag = randomBool((double)(r - t) / (double)r);
@@ -250,8 +269,9 @@ EventHandler::ResourceNodes::iterator EventHandler::findResourceNodeByNickname(R
 {
     auto iter = std::find_if(nodes.begin(),
                              nodes.end(),
-                             [this, &nickname](ResourceNodes::value_type& v) {
-        return this->getNicknameFromResourceNode(v) == nickname; });
+    [this, &nickname](ResourceNodes::value_type& v) {
+        return this->getNicknameFromResourceNode(v) == nickname;
+    });
     return iter;
 }
 
@@ -296,8 +316,8 @@ void EventHandler::shutdown()
 
 void EventHandler::run()
 {
-    m_timerIncRedundance.start(60000);
-    m_timerDecRedundance.start(60000);
+    m_timerIncRedundance.start(6000);
+    m_timerDecRedundance.start(6000);
     m_resourceFetcher.start();
     m_resourceRegister.start();
     sendJoin();
@@ -325,8 +345,8 @@ void EventHandler::getNodesList(QString resource)
         for (auto& node : nodes)
         {
             str = QString("%1 %2 %3").arg(QString::fromStdString(std::get<0>(node).toUri()))
-                    .arg(std::get<1>(node))
-                    .arg(std::get<2>(node));
+                  .arg(std::get<1>(node))
+                  .arg(std::get<2>(node));
         }
         list << str;
     }
@@ -334,4 +354,14 @@ void EventHandler::getNodesList(QString resource)
     {
     }
     emit nodesListReady(list);
+}
+
+void EventHandler::getOnlineList()
+{
+    QStringList list;
+    for (auto& n : m_onlineHost)
+    {
+        list << n;
+    }
+    emit onlineListReady(list);
 }

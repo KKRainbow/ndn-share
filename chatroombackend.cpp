@@ -7,9 +7,9 @@
 ChatroomBackend::ChatroomBackend(ndn::Name routePrefix,
                                  ndn::Name broadcastPrefix,
                                  QObject *parent):
-        QThread(parent),
-        m_routePrefix(routePrefix),
-        m_broadcastPrefix(broadcastPrefix)
+    QThread(parent),
+    m_routePrefix(routePrefix),
+    m_broadcastPrefix(broadcastPrefix)
 {
     initChronoSync();
     connect(&m_timerNfdc, SIGNAL(timeout()), this, SLOT(nfdcMakeBroadcast()));
@@ -58,21 +58,24 @@ void ChatroomBackend::processSyncUpdate(const std::vector<chronosync::MissingDat
 {
     for (const auto& update : updates)
     {
-        m_socket->fetchData(update.session,
-                            update.high,
-                            std::bind(&ChatroomBackend::processFetchedData, this, std::placeholders::_1)
-                            );
+        for (chronosync::SeqNo seq = update.low; seq <= update.high; seq++)
+        {
+            m_socket->fetchData(update.session,
+                                seq,
+                                std::bind(&ChatroomBackend::processFetchedData, this, std::placeholders::_1)
+                               );
+        }
     }
 }
 
 void ChatroomBackend::initChronoSync()
 {
     m_socket = std::make_shared<chronosync::Socket>(
-                            m_broadcastPrefix,
-                            m_routePrefix,
-                            m_face,
-                            std::bind(&ChatroomBackend::processSyncUpdate, this, std::placeholders::_1)
-                            );
+                   m_broadcastPrefix,
+                   m_routePrefix,
+                   m_face,
+                   std::bind(&ChatroomBackend::processSyncUpdate, this, std::placeholders::_1)
+               );
 }
 
 void ChatroomBackend::run()
@@ -81,16 +84,16 @@ void ChatroomBackend::run()
     {
         while (true)
         {
-        m_timerNfdc.start(1000);
-        m_face.getIoService().run();
-        std::cerr << "chatroom backend nothing to do!" << std::endl;
-        sleep(2);
+            m_timerNfdc.start(1000);
+            m_face.processEvents(ndn::time::milliseconds::zero(), true);
+            std::cerr << "chatroom backend nothing to do!" << std::endl;
+            sleep(2);
         }
     }
     catch(...)
     {
-    //should never be here
-    std::cerr << "chatroom backend exit!!" << std::endl;
+        //should never be here
+        std::cerr << "chatroom backend exit!!" << std::endl;
     }
 
 }

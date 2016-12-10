@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QDir dir(argv[2]);
 
     auto cr = Chatroom::getChatroom("abc", argv[1], r, b);
-    auto eventHandler = std::make_shared<EventHandler>(cr, dir, r);
+    auto eventHandler = std::make_shared<EventHandler>(cr, dir, r, 3, 6);
 
     ConsoleServer s(eventHandler);
     s.start();

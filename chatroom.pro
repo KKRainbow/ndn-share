@@ -16,27 +16,27 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    nfdc.cpp \
-    chatroom.cpp \
-    chatroombackend.cpp \
-    chatmessage.cpp \
-    sendrandommsg.cpp \
-    consoleserver.cpp \
-    eventhandler.cpp \
-    resourceregister.cpp \
-    resourcefetcher.cpp
+        nfdc.cpp \
+        chatroom.cpp \
+        chatroombackend.cpp \
+        chatmessage.cpp \
+        sendrandommsg.cpp \
+        consoleserver.cpp \
+        eventhandler.cpp \
+        resourceregister.cpp \
+        resourcefetcher.cpp
 
 HEADERS += \
-    nfdc.h \
-    common.h \
-    chatroom.h \
-    chatroombackend.h \
-    chatmessage.h \
-    sendrandommsg.h \
-    consoleserver.h \
-    eventhandler.h \
-    resourceregister.h \
-    resourcefetcher.h
+        nfdc.h \
+        common.h \
+        chatroom.h \
+        chatroombackend.h \
+        chatmessage.h \
+        sendrandommsg.h \
+        consoleserver.h \
+        eventhandler.h \
+        resourceregister.h \
+        resourcefetcher.h
 
 QMAKE_CXXFLAGS += -std=c++11
 LIBS += -lndn-cxx -lChronoSync -lboost_system -lboost_filesystem -lboost_thread -lcryptopp -lsqlite3

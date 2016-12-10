@@ -18,7 +18,7 @@ Chatroom::Chatroom(QString chatroomName,
 void Chatroom::sendMessage(std::string& msg)
 {
     QByteArray byteArr;
-    QDataStream s(byteArr);
+    QDataStream s(&byteArr, QIODevice::WriteOnly);
     qint64 timestamp = (qint64)QDateTime::currentDateTime().toTime_t();
     s << m_nick << timestamp << QString::fromStdString(msg);
 
@@ -31,9 +31,9 @@ void Chatroom::emitAddChatroomSignal()
 }
 
 std::shared_ptr<Chatroom> Chatroom::getChatroom(QString chatroomName,
-                                                QString nickname,
-                                                ndn::Name routePrefix,
-                                                ndn::Name broadcastPrefix)
+        QString nickname,
+        ndn::Name routePrefix,
+        ndn::Name broadcastPrefix)
 {
     if (!m_backend)
     {
@@ -42,11 +42,11 @@ std::shared_ptr<Chatroom> Chatroom::getChatroom(QString chatroomName,
     }
     auto frontend = std::make_shared<Chatroom>(chatroomName, nickname);
 
-    connect(m_backend.get(), SIGNAL(fetchMessage(QString,QString)),
-            frontend.get(), SLOT(fetchMessageSlot(QString,QString)));
+    connect(m_backend.get(), SIGNAL(fetchMessage(QString,QByteArray)),
+            frontend.get(), SLOT(fetchMessageSlot(QString,QByteArray)));
 
-    connect(frontend.get(), SIGNAL(sendMessageSignal(QString,QString)),
-            m_backend.get(), SLOT(sendMessage(QString,QString)));
+    connect(frontend.get(), SIGNAL(sendMessageSignal(QString,QByteArray)),
+            m_backend.get(), SLOT(sendMessage(QString,QByteArray)));
     connect(frontend.get(), SIGNAL(addChatroomSignal(QString)),
             m_backend.get(), SLOT(addChatroom(QString)));
 

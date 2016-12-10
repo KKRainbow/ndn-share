@@ -28,7 +28,7 @@ public:
     typedef std::vector<ResourceNode> ResourceNodes;
     typedef std::map<QString, ResourceNodes> IndexTable;
 public:
-    explicit EventHandler(std::shared_ptr<Chatroom> chatroom, QDir dir, ndn::Name prefix, QObject *parent = 0);
+    explicit EventHandler(std::shared_ptr<Chatroom> chatroom, QDir dir, ndn::Name prefix, quint32 min, quint32 max, QObject *parent = 0);
     void run() override;
 
 protected:
@@ -47,19 +47,25 @@ private:
 
 protected:
     std::shared_ptr<Chatroom> m_chatroom;
+    QDir m_dir;
+    ResourceRegister m_resourceRegister;
+    std::pair<quint32, quint32> m_redundentValue;
     //address, availablity, host nickname
-    ndn::Name& getAddressFromResourceNode(ResourceNode& node) {return std::get<0>(node);}
-    bool& getAvailabilityFromResourceNode(ResourceNode& node) {return std::get<1>(node);}
-    QString& getNicknameFromResourceNode(ResourceNode& node) {return std::get<2>(node);}
+    ndn::Name& getAddressFromResourceNode(ResourceNode& node) {
+        return std::get<0>(node);
+    }
+    bool& getAvailabilityFromResourceNode(ResourceNode& node) {
+        return std::get<1>(node);
+    }
+    QString& getNicknameFromResourceNode(ResourceNode& node) {
+        return std::get<2>(node);
+    }
     IndexTable m_indexTable;
-    std::pair<int, int> m_redundentValue;
     std::set<QString> m_onlineHost;
     ResourceFetcher m_resourceFetcher;
-    ResourceRegister m_resourceRegister;
 
 private:
     QTimer m_timerIncRedundance, m_timerDecRedundance;
-    QDir m_dir;
 
 signals:
     void fetchResource(QString resource, QString address);
@@ -68,6 +74,7 @@ signals:
 
     void resourcesListReady(QStringList stringList);
     void nodesListReady(QStringList stringList);
+    void onlineListReady(QStringList stringList);
 
 private slots:
     void newMessageSlot(QString chatroom, QString nick, qint64 timestamp, QString msg);
@@ -83,6 +90,7 @@ public slots:
     void publishResource(QString resource, QString filename);
     void getResourcesList();
     void getNodesList(QString resource);
+    void getOnlineList();
     void shutdown();
 };
 

@@ -5,6 +5,8 @@
 #include <QThread>
 #include <QFile>
 #include "common.h"
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/signing-helpers.hpp>
 
 class ResourceRegister : public QThread
 {
@@ -22,6 +24,7 @@ private:
     std::map<QString, QString> m_resourceFileMap;
     std::map<QString, int> m_resourceCounterMap;
     ndn::Name m_prefix;
+    ndn::security::KeyChain m_keyChain;
 
 signals:
     void registerResourceResult(QString resource, bool res, QString msg);

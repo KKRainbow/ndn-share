@@ -15,9 +15,9 @@ class Chatroom : public QObject
     static std::shared_ptr<ChatroomBackend> m_backend;
 public:
     static std::shared_ptr<Chatroom> getChatroom(QString chatroomName,
-                                                 QString nickname,
-                                                 ndn::Name routePrefix,
-                                                 ndn::Name broadcastPrefix);
+            QString nickname,
+            ndn::Name routePrefix,
+            ndn::Name broadcastPrefix);
 
     QString getOneMessage(bool blocked);
     QStringList getMessages(int num);
